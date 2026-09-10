@@ -2,48 +2,52 @@ version 1.0
 
 workflow ont_uncalled4 {
     input {
-        File bam_file,
-        File pod5_dir,
-        String sample_id,
-        File ref_genome,
+        File bam_file
+        File pod5_dir
+        String sample_id
+        File ref_genome
+        Int cpus
     }
 
     call Uncalled4Align {
         input:
             bam_file = bam_file,
             pod5_dir = pod5_dir,
-            sample_id = sample,
-            ref_genome = ref_genome
+            sample_id = sample_id,
+            ref_genome = ref_genome,
+            cpus = cpus
     }
 
     output {
-        File uncalled4_bam = Uncalled4Align.bam
-        File uncalled4_bai = Uncalled4Align.bai
-        File uncalled4_log = Uncalled4Align.log
+        File uncalled4_bam = Uncalled4Align.uncalled4_bam
+        File uncalled4_bai = Uncalled4Align.uncalled4_bai
+        File uncalled4_log = Uncalled4Align.uncalled4_log
     }
+}
 
 task Uncalled4Align {
     input {
-        File bam_file,
-        File pod5_dir,
-        String sample_id,
-        File ref_genome,
+        File bam_file
+        File pod5_dir
+        String sample_id
+        File ref_genome
         Int cpus
     }
 
     command <<<
     set -euo pipefail
-    filename=$(basename "~{pod5_file}" .pod5)
-    
     mkdir -p uncalled4_bam
+    output_base="uncalled4_bam/${sample_id}"
+    unsorted_bam="${output_base}.unsorted.bam"
+    output_bam="${output_base}.bam"    
 
     echo $(date): running uncalled4
     /usr/bin/time --verbose \
     uncalled4 align --rna \
-        --ref ${ref_genome} \
-        --reads ${pod5_dir} \
+        --ref "~{ref_genome}" \
+        --reads "~{pod5_dir}" \
         --recursive \
-        --bam-in ${input_bam} \
+        --bam-in "~{bam_file}" \
         --bam-out ${unsorted_bam} \
         -p ${cpus}
 
@@ -57,9 +61,9 @@ task Uncalled4Align {
     >>>
 
     output {
-        File uncalled4_bam = Uncalled4Align.bam
-        File uncalled4_bai = Uncalled4Align.bai
-        File uncalled4_log = Uncalled4Align.log
+        File uncalled4_bam = "uncalled4_bam/" + sample_id + ".bam"
+        File uncalled4_bai = "uncalled4_bam/" + sample_id + ".bam.csi"
+        File uncalled4_log = "uncalled4_bam/" + sample_id + ".log"
     }
 
     runtime {
@@ -68,6 +72,6 @@ task Uncalled4Align {
         memory: "16GB"
         maxRunTime: 172800 #48 hours (48 * 3600 seconds)
         runtime_minutes: 1 #47 hours (47 * 60 minutes)
-        docker: "FIXME"
+        docker: "joshtburdick/uncalled4:v0.1--f7f0271a9aad"
     }
 }
