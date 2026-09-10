@@ -9,16 +9,6 @@ Build the image using the following command:
 docker build -t uncalled4 .
 ```
 
-## Running the image
+## Using in a WDL script
 
-To run `uncalled4`, you should mount your local data directory to the `/data` volume inside the container:
-
-```bash
-docker run --rm -v /path/to/your/data:/data uncalled4 [command]
-```
-
-For example, to see the help menu:
-
-```bash
-docker run --rm uncalled4 --help
-```
+An example WDL script to run this is in `doc/pipeline_uncalled4.wdl` .
