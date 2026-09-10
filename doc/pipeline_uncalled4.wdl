@@ -3,7 +3,7 @@ version 1.0
 workflow ont_uncalled4 {
     input {
         File bam_file
-        File pod5_dir
+        String pod5_dir
         String sample_id
         File ref_genome
         Int cpus
@@ -28,7 +28,7 @@ workflow ont_uncalled4 {
 task Uncalled4Align {
     input {
         File bam_file
-        File pod5_dir
+        String pod5_dir
         String sample_id
         File ref_genome
         Int cpus
@@ -39,25 +39,24 @@ task Uncalled4Align {
     mkdir -p uncalled4_bam
     output_base="uncalled4_bam/${sample_id}"
     unsorted_bam="${output_base}.unsorted.bam"
-    output_bam="${output_base}.bam"    
+    output_bam="${output_base}.bam"
+    log_file="${output_base}.log"
 
-    echo $(date): running uncalled4
-    /usr/bin/time --verbose \
-    uncalled4 align --rna \
-        --ref "~{ref_genome}" \
-        --reads "~{pod5_dir}" \
-        --recursive \
-        --bam-in "~{bam_file}" \
-        --bam-out ${unsorted_bam} \
-        -p ${cpus}
+    {
+        echo $(date): running uncalled4
+        /usr/bin/time --verbose \
+        uncalled4 align --rna \
+            --ref "~{ref_genome}" \
+            --reads "~{pod5_dir}" \
+            --recursive \
+            --bam-in "~{bam_file}" \
+            --bam-out "${unsorted_bam}" \
+            -p ~{cpus}
 
-    echo $(date): sorting BAM
-    module load samtools
-    samtools sort --output-fmt BAM --write-index \
-    -o ${output_bam} \
-    ${unsorted_bam}
-
-    echo $(date): finished running uncalled4
+        echo $(date): sorting BAM
+        samtools sort --output-fmt BAM --write-index -o "${output_bam}" "${unsorted_bam}"
+        echo $(date): finished running uncalled4
+    } 2>&1 | tee "${log_file}"
     >>>
 
     output {
@@ -72,6 +71,7 @@ task Uncalled4Align {
         memory: "16GB"
         maxRunTime: 172800 #48 hours (48 * 3600 seconds)
         runtime_minutes: 1 #47 hours (47 * 60 minutes)
-        docker: "joshtburdick/uncalled4:v0.1--f7f0271a9aad"
+        docker: "joshtburdick/uncalled4@sha256:c130f85cb2e7151dddb849d882ef3ac16b8f8283573bf53f3fdec051de2bcb01"
+#        docker: "joshtburdick/uncalled4:v0.1--f7f0271a9aad"
     }
 }
