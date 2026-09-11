@@ -37,7 +37,7 @@ task Uncalled4Align {
     command <<<
     set -euo pipefail
     mkdir -p uncalled4_bam
-    output_base="uncalled4_bam/~{sample_id}"
+    output_base="~{sample_id}"
     unsorted_bam="${output_base}.unsorted.bam"
     output_bam="${output_base}.bam"
     log_file="${output_base}.log"
@@ -59,14 +59,16 @@ task Uncalled4Align {
 
         echo $(date): sorting BAM
         samtools sort --output-fmt BAM --write-index -o "${output_bam}" "${unsorted_bam}"
+        rm ${unsorted_bam}
+
         echo $(date): finished running uncalled4
     } 2>&1 | tee "${log_file}"
     >>>
 
     output {
-        File uncalled4_bam = "uncalled4_bam/" + sample_id + ".bam"
-        File uncalled4_bai = "uncalled4_bam/" + sample_id + ".bam.csi"
-        File uncalled4_log = "uncalled4_bam/" + sample_id + ".log"
+        File uncalled4_bam = sample_id + ".bam"
+        File uncalled4_bai = sample_id + ".bam.csi"
+        File uncalled4_log = sample_id + ".log"
     }
 
     runtime {
