@@ -1,6 +1,6 @@
 # uncalled4-docker
 
-Docker image to run (uncalled4)[https://github.com/skovaka/uncalled4]
+Docker image to run [uncalled4](https://github.com/skovaka/uncalled4)
 
 ## Building the image
 
